@@ -788,7 +788,9 @@
                         el.style.boxShadow = '0 0 15px #0ff'; el.style.zIndex = '1001';
                         // 初期配置（bottom/right等）を現在のピクセル座標（left/top）に固定して移動しやすくする
                         const rect = el.getBoundingClientRect();
-                        el.style.bottom = 'auto'; el.style.right = 'auto'; el.style.left = rect.left + 'px'; el.style.top = rect.top + 'px';
+                        el.style.bottom = 'auto'; el.style.right = 'auto'; 
+                        el.style.left = rect.left + 'px'; el.style.top = rect.top + 'px';
+                        el.style.margin = '0';
                     }
                 });
             });
@@ -801,6 +803,8 @@
             editableIds.forEach(id => {
                 const el = document.getElementById(id);
                 if(!el) return;
+                
+                // タッチ対応
                 el.addEventListener('touchstart', (e) => {
                     if(!isEditMode) return; e.preventDefault(); draggedElement = el;
                     const touch = e.changedTouches[0]; const rect = el.getBoundingClientRect();
@@ -817,6 +821,24 @@
 
                 const endDrag = (e) => { if(!isEditMode) return; e.preventDefault(); if(draggedElement === el) draggedElement = null; };
                 el.addEventListener('touchend', endDrag, {passive: false}); el.addEventListener('touchcancel', endDrag, {passive: false});
+
+                // マウス対応 (PCでのテストや一部デバイス用)
+                el.addEventListener('mousedown', (e) => {
+                    if(!isEditMode) return; e.preventDefault(); draggedElement = el;
+                    const rect = el.getBoundingClientRect();
+                    dragOffset.x = e.clientX - rect.left; dragOffset.y = e.clientY - rect.top;
+                });
+                
+                document.addEventListener('mousemove', (e) => {
+                    if(!isEditMode || draggedElement !== el) return; e.preventDefault();
+                    let nx = e.clientX - dragOffset.x, ny = e.clientY - dragOffset.y;
+                    nx = Math.max(0, Math.min(window.innerWidth - el.offsetWidth, nx)); ny = Math.max(0, Math.min(window.innerHeight - el.offsetHeight, ny));
+                    el.style.left = nx + 'px'; el.style.top = ny + 'px';
+                });
+                
+                document.addEventListener('mouseup', (e) => {
+                    if(!isEditMode) return; if(draggedElement === el) draggedElement = null;
+                });
             });
         }
 
@@ -1124,7 +1146,7 @@
                 if (!state.isZipping && !isSkydiving) {
                     for (let zip of ziplines) { if (controls.getObject().position.distanceTo(zip.p1) < 4) { nearZipline = zip; zipDir = 1; break; } if (controls.getObject().position.distanceTo(zip.p2) < 4) { nearZipline = zip; zipDir = -1; break; } }
                     if (nearZipline) { document.getElementById('interact-prompt').style.display = 'block'; if (keys.f) { state.isZipping = true; state.zipStart = zipDir === 1 ? nearZipline.p1.clone().add(new THREE.Vector3(0, 3.5, 0)) : nearZipline.p2.clone().add(new THREE.Vector3(0, 3.5, 0)); state.zipEnd = zipDir === 1 ? nearZipline.p2.clone().add(new THREE.Vector3(0, 3.5, 0)) : nearZipline.p1.clone().add(new THREE.Vector3(0, 3.5, 0)); state.zipProgress = 0; phy.vel.set(0,0,0); } } else { document.getElementById('interact-prompt').style.display = 'none'; }
-                    for (let jp of jumpPads) { if (Math.abs(controls.getObject().position.x - jp.x) < 2.5 && Math.abs(controls.getObject().position.z - jp.z) < 2.5 && Math.abs(controls.getObject().position.y - jp.y) < 3.0) { phy.vel.y = 130; isSkydiving = true; isParachuting = false; state.jumpCount = 1; createEffect(jp.mesh.position, 0x00aaff, 30); showKF(`<span style='color:#0fc'>${isLangJa ? langData.ja.msgPad : langData.en.msgPad}</span>`); } }
+                    for (let jp of jumpPads) { if (Math.abs(controls.getObject().position.x - jp.x) < 2.5 && Math.abs(controls.getObject().position.z - jp.z) < 2.5 && Math.abs(controls.getObject().position.y - jp.y) < 3.0) { phy.vel.y = 260; isSkydiving = true; isParachuting = false; state.jumpCount = 1; createEffect(jp.mesh.position, 0x00aaff, 30); showKF(`<span style='color:#0fc'>${isLangJa ? langData.ja.msgPad : langData.en.msgPad}</span>`); } }
                 } else { document.getElementById('interact-prompt').style.display = 'none'; }
 
                 trafficCars.forEach(car => {
