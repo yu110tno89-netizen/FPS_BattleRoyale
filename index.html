@@ -485,7 +485,11 @@
                         const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
                         const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
                         const euler = new THREE.Euler(0, 0, 0, 'YXZ'); euler.setFromQuaternion(scope.camera.quaternion);
-                        euler.y -= movementX * 0.002 * currentSens; euler.x -= movementY * 0.002 * currentSens; euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x));
+                        
+                        const adsMultiplier = isAiming ? 0.5 : 1.0;
+                        euler.y -= movementX * 0.002 * currentSens * adsMultiplier; 
+                        euler.x -= movementY * 0.002 * currentSens * adsMultiplier; 
+                        euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x));
                         scope.camera.quaternion.setFromEuler(euler); scope.dispatchEvent({ type: 'change' });
                     }
                     function onPointerlockChange() { if (scope.domElement.ownerDocument.pointerLockElement === scope.domElement) { scope.dispatchEvent({ type: 'lock' }); scope.isLocked = true; } else { scope.dispatchEvent({ type: 'unlock' }); scope.isLocked = false; } }
@@ -532,6 +536,89 @@
                 if (obs.type === 'circle') { if (Math.pow(tx - obs.x, 2) + Math.pow(tz - obs.z, 2) < Math.pow(radius + obs.r, 2)) return true; } 
                 else if (obs.type === 'obb') { const dx = tx - obs.x, dz = tz - obs.z; const lx = Math.abs(dx * Math.cos(obs.a) - dz * Math.sin(obs.a)), lz = Math.abs(dx * Math.sin(obs.a) + dz * Math.cos(obs.a)); if (lx < obs.w + radius && lz < obs.d + radius) return true; }
             } return false;
+        }
+
+        // 衝突を解決し、壁の外側に押し出す物理デペネトレーションシステム
+        function resolveObstacleCollisions(pos, radius, height) {
+            const pMin = pos.y - height, pMax = pos.y + 0.5;
+            let collided = false;
+            
+            // 最大3回ループして複数の壁からの干渉を解消する
+            for (let iter = 0; iter < 3; iter++) {
+                let maxPenetration = 0;
+                let resolveX = 0, resolveZ = 0;
+                
+                for (const obs of obstacles) {
+                    // Y軸の重なりがない場合はスキップ
+                    if (pMax <= obs.y1 || pMin >= obs.y2 || obs.y2 <= pMin + STEP_HEIGHT) continue;
+                    
+                    if (obs.type === 'circle') {
+                        const dx = pos.x - obs.x;
+                        const dz = pos.z - obs.z;
+                        const dist = Math.sqrt(dx * dx + dz * dz);
+                        const minDist = radius + obs.r;
+                        
+                        if (dist < minDist) {
+                            collided = true;
+                            const pen = minDist - dist;
+                            if (pen > maxPenetration) {
+                                maxPenetration = pen;
+                                if (dist > 0.001) {
+                                    resolveX = (dx / dist) * pen;
+                                    resolveZ = (dz / dist) * pen;
+                                } else {
+                                    const angle = Math.random() * Math.PI * 2;
+                                    resolveX = Math.cos(angle) * pen;
+                                    resolveZ = Math.sin(angle) * pen;
+                                }
+                            }
+                        }
+                    } else if (obs.type === 'obb') {
+                        const dx = pos.x - obs.x;
+                        const dz = pos.z - obs.z;
+                        
+                        // OBBローカル空間へ変換
+                        const lx = dx * Math.cos(obs.a) - dz * Math.sin(obs.a);
+                        const lz = dx * Math.sin(obs.a) + dz * Math.cos(obs.a);
+                        
+                        const absLx = Math.abs(lx);
+                        const absLz = Math.abs(lz);
+                        
+                        const halfW = obs.w + radius;
+                        const halfD = obs.d + radius;
+                        
+                        if (absLx < halfW && absLz < halfD) {
+                            collided = true;
+                            const penX = halfW - absLx;
+                            const penZ = halfD - absLz;
+                            
+                            if (penX < penZ) {
+                                if (penX > maxPenetration) {
+                                    maxPenetration = penX;
+                                    const sign = lx >= 0 ? 1 : -1;
+                                    resolveX = sign * penX * Math.cos(obs.a);
+                                    resolveZ = -sign * penX * Math.sin(obs.a);
+                                }
+                            } else {
+                                if (penZ > maxPenetration) {
+                                    maxPenetration = penZ;
+                                    const sign = lz >= 0 ? 1 : -1;
+                                    resolveX = sign * penZ * Math.sin(obs.a);
+                                    resolveZ = sign * penZ * Math.cos(obs.a);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (maxPenetration > 0) {
+                    pos.x += resolveX;
+                    pos.z += resolveZ;
+                } else {
+                    break; 
+                }
+            }
+            return collided;
         }
 
         function checkCollision(tx, ty, tz, radius, height) {
@@ -607,7 +694,13 @@
 
             const lookZone = document.getElementById('look-shoot-zone');
             lookZone.addEventListener('touchstart', (e) => { if(isEditMode) return; e.preventDefault(); if (lookTouchId === null) { const t = e.changedTouches[0]; lookTouchId = t.identifier; lastLookTouch.x = t.clientX; lastLookTouch.y = t.clientY; } }, {passive: false});
-            lookZone.addEventListener('touchmove', (e) => { if(isEditMode) return; e.preventDefault(); for (let i = 0; i < e.changedTouches.length; i++) { if (e.changedTouches[i].identifier === lookTouchId) { const t = e.changedTouches[i]; const dx = (t.clientX - lastLookTouch.x) * currentSens; const dy = (t.clientY - lastLookTouch.y) * currentSens; if (state.isPlaying && !state.isDead) { const euler = new THREE.Euler(0, 0, 0, 'YXZ'); euler.setFromQuaternion(camera.quaternion); const sens = 0.005; euler.y -= dx * sens; euler.x -= dy * sens; euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x)); camera.quaternion.setFromEuler(euler); } lastLookTouch.x = t.clientX; lastLookTouch.y = t.clientY; } } }, {passive: false});
+            lookZone.addEventListener('touchmove', (e) => { if(isEditMode) return; e.preventDefault(); for (let i = 0; i < e.changedTouches.length; i++) { if (e.changedTouches[i].identifier === lookTouchId) { const t = e.changedTouches[i]; 
+                
+                const adsMultiplier = isAiming ? 0.5 : 1.0;
+                const dx = (t.clientX - lastLookTouch.x) * currentSens * adsMultiplier;
+                const dy = (t.clientY - lastLookTouch.y) * currentSens * adsMultiplier;
+                
+                if (state.isPlaying && !state.isDead) { const euler = new THREE.Euler(0, 0, 0, 'YXZ'); euler.setFromQuaternion(camera.quaternion); const sens = 0.005; euler.y -= dx * sens; euler.x -= dy * sens; euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x)); camera.quaternion.setFromEuler(euler); } lastLookTouch.x = t.clientX; lastLookTouch.y = t.clientY; } } }, {passive: false});
             lookZone.addEventListener('touchend', (e) => { if(isEditMode) return; e.preventDefault(); for (let i = 0; i < e.changedTouches.length; i++) { if (e.changedTouches[i].identifier === lookTouchId) { lookTouchId = null; } } }, {passive: false});
             
             const btnFire = document.getElementById('btn-fire');
@@ -623,7 +716,12 @@
                 if(isEditMode) return; e.preventDefault();
                 for (let i = 0; i < e.changedTouches.length; i++) {
                     if (e.changedTouches[i].identifier === fireTouchId) {
-                        const t = e.changedTouches[i], dx = (t.clientX - lastFireTouch.x) * currentSens, dy = (t.clientY - lastFireTouch.y) * currentSens;
+                        const t = e.changedTouches[i];
+                        
+                        const adsMultiplier = isAiming ? 0.5 : 1.0;
+                        const dx = (t.clientX - lastFireTouch.x) * currentSens * adsMultiplier;
+                        const dy = (t.clientY - lastFireTouch.y) * currentSens * adsMultiplier;
+                        
                         if (state.isPlaying && !state.isDead) { const euler = new THREE.Euler(0, 0, 0, 'YXZ'); euler.setFromQuaternion(camera.quaternion); const sens = 0.005; euler.y -= dx * sens; euler.x -= dy * sens; euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x)); camera.quaternion.setFromEuler(euler); }
                         lastFireTouch.x = t.clientX; lastFireTouch.y = t.clientY;
                     }
@@ -634,7 +732,24 @@
             btnFire.addEventListener('touchend', endFire, {passive: false}); btnFire.addEventListener('touchcancel', endFire, {passive: false});
 
             const btnJump = document.getElementById('btn-jump'); btnJump.addEventListener('touchstart', (e) => { if(isEditMode) return; e.preventDefault(); keys.space = true; simulateJump(); }); btnJump.addEventListener('touchend', (e) => { if(isEditMode) return; e.preventDefault(); keys.space = false; });
-            const btnAds = document.getElementById('btn-ads'); btnAds.addEventListener('touchstart', (e) => { if(isEditMode) return; e.preventDefault(); isAiming = true; }); btnAds.addEventListener('touchend', (e) => { if(isEditMode) return; e.preventDefault(); isAiming = false; });
+            
+            const btnAds = document.getElementById('btn-ads'); 
+            btnAds.addEventListener('touchstart', (e) => { 
+                if(isEditMode) return; 
+                e.preventDefault(); 
+                isAiming = !isAiming; // タップで照準ON/OFF切り替え (トグル)
+                
+                // 照準状態に応じたビジュアルフィードバック
+                if (isAiming) {
+                    btnAds.style.background = "rgba(212, 175, 55, 0.6)";
+                    btnAds.style.borderColor = "#d4af37";
+                } else {
+                    btnAds.style.background = "rgba(0, 0, 0, 0.4)";
+                    btnAds.style.borderColor = "rgba(255, 255, 255, 0.5)";
+                }
+            });
+            // touchend は何もしない (トグル式のため指を離しても照準を維持する)
+
             const btnReload = document.getElementById('btn-reload'); btnReload.addEventListener('touchstart', (e) => { if(isEditMode) return; e.preventDefault(); if(state.ammo < state.wpn.clip && state.maxAmmo > 0 && !isSkydiving && !state.isZipping) doReload(); });
             const btnSkill = document.getElementById('btn-skill'); btnSkill.addEventListener('touchstart', (e) => { if(isEditMode) return; e.preventDefault(); if (state.isPlaying && !state.isDead && !isSkydiving && !state.isZipping) { if (state.skillCooldown <= 0 && state.skillUses > 0) { if (state.cls.id === 'SCOUT') { if (!keys.e) { useSkill(); keys.e = true; } } else { keys.e = true; } } } }); btnSkill.addEventListener('touchend', (e) => { if(isEditMode) return; e.preventDefault(); if (keys.e && state.cls.id !== 'SCOUT' && state.isPlaying && !state.isDead && !isSkydiving && !state.isZipping) { if (state.skillCooldown <= 0 && state.skillUses > 0) useSkill(); } keys.e = false; hideSkillPreview(); });
             const btnAction = document.getElementById('btn-action'); btnAction.addEventListener('touchstart', (e) => { if(isEditMode) return; e.preventDefault(); keys.f = true; }); btnAction.addEventListener('touchend', (e) => { if(isEditMode) return; e.preventDefault(); keys.f = false; });
@@ -1035,13 +1150,18 @@
                     const glideSpeed = isParachuting ? 20 : 40; if(Math.abs(phy.dir.z) > 0) phy.vel.z -= phy.dir.z * glideSpeed * delta; if(Math.abs(phy.dir.x) > 0) phy.vel.x -= phy.dir.x * glideSpeed * delta;
                     const right = new THREE.Vector3(); right.setFromMatrixColumn(camera.matrix, 0); const forward = new THREE.Vector3(); forward.crossVectors(camera.up, right);
                     const moveX = right.x * (-phy.vel.x * delta) + forward.x * (-phy.vel.z * delta), moveZ = right.z * (-phy.vel.x * delta) + forward.z * (-phy.vel.z * delta), oldX = controls.getObject().position.x, oldZ = controls.getObject().position.z;
-                    controls.getObject().position.x += moveX; if (checkCollision(controls.getObject().position.x, oldY, oldZ, state.cls.radius, state.cls.height)) controls.getObject().position.x = oldX;
-                    controls.getObject().position.z += moveZ; if (checkCollision(controls.getObject().position.x, oldY, controls.getObject().position.z, state.cls.radius, state.cls.height)) controls.getObject().position.z = oldZ;
+                    
+                    controls.getObject().position.x += moveX;
+                    controls.getObject().position.z += moveZ;
+                    resolveObstacleCollisions(controls.getObject().position, state.cls.radius, state.cls.height);
                     
                     const groundY = getGroundHeight(controls.getObject().position.x, oldY, controls.getObject().position.z), currentAlt = oldY - groundY;
                     if (!isParachuting && currentAlt < 150) { isParachuting = true; playerParachute = createParachute(); scene.add(playerParachute); }
                     if (isParachuting) { phy.vel.y = THREE.MathUtils.lerp(phy.vel.y, -10.0, 4 * delta); if (playerParachute) { playerParachute.position.copy(controls.getObject().position).add(new THREE.Vector3(0, 3, 0)); playerParachute.rotation.z = Math.sin(time * 0.002) * 0.05; playerParachute.rotation.x = Math.cos(time * 0.0015) * 0.05; } } else { phy.vel.y -= 9.8 * 2.5 * delta; if (phy.vel.y < -70) phy.vel.y = -70; }
                     controls.getObject().position.y += phy.vel.y * delta;
+                    
+                    resolveObstacleCollisions(controls.getObject().position, state.cls.radius, state.cls.height);
+                    
                     if (controls.getObject().position.y <= groundY + currentHeight) { isSkydiving = false; isParachuting = false; controls.getObject().position.y = groundY + currentHeight; phy.vel.y = 0; if (playerParachute) { scene.remove(playerParachute); playerParachute.children.forEach(c => { if(c.geometry) c.geometry.dispose(); if(c.material) c.material.dispose(); }); playerParachute = null; } if (gunMesh) gunMesh.visible = true; }
                 } else {
                     if (gunMesh) gunMesh.visible = !(isAiming && state.wpn.id==='SNIPER' && camera.fov < 20);
@@ -1052,10 +1172,20 @@
                     if(Math.abs(phy.dir.z) > 0) phy.vel.z -= phy.dir.z * speed * delta; if(Math.abs(phy.dir.x) > 0) phy.vel.x -= phy.dir.x * speed * delta; phy.vel.y -= 30 * delta; 
                     currentHeight = THREE.MathUtils.lerp(currentHeight, keys.c?state.cls.height*0.5:state.cls.height, 15*delta); const radius = keys.c ? state.cls.radius * 0.8 : state.cls.radius;
                     const right = new THREE.Vector3(); right.setFromMatrixColumn(camera.matrix, 0); const forward = new THREE.Vector3(); forward.crossVectors(camera.up, right);
-                    const moveX = right.x * (-phy.vel.x * delta) + forward.x * (-phy.vel.z * delta), moveZ = right.z * (-phy.vel.x * delta) + forward.z * (-phy.vel.z * delta), oldX = controls.getObject().position.x, oldZ = controls.getObject().position.z, oldY = controls.getObject().position.y;
-                    controls.getObject().position.x += moveX; if(checkCollision(controls.getObject().position.x, oldY, oldZ, radius, currentHeight)) controls.getObject().position.x = oldX;
-                    controls.getObject().position.z += moveZ; if(checkCollision(controls.getObject().position.x, oldY, controls.getObject().position.z, radius, currentHeight)) controls.getObject().position.z = oldZ;
+                    const moveX = right.x * (-phy.vel.x * delta) + forward.x * (-phy.vel.z * delta), moveZ = right.z * (-phy.vel.x * delta) + forward.z * (-phy.vel.z * delta), oldY = controls.getObject().position.y;
+                    
+                    // 位置移動の適用
+                    controls.getObject().position.x += moveX;
+                    controls.getObject().position.z += moveZ;
+                    
+                    // 水平方向のめり込みを押し出し解決
+                    resolveObstacleCollisions(controls.getObject().position, radius, currentHeight);
+                    
+                    // 垂直方向(落下など)の適用
                     controls.getObject().position.y += phy.vel.y * delta;
+                    
+                    // 落下後に再度めり込みをチェック・解決
+                    resolveObstacleCollisions(controls.getObject().position, radius, currentHeight);
                     
                     const searchY = Math.max(oldY, controls.getObject().position.y);
                     const gY = getGroundHeight(controls.getObject().position.x, searchY, controls.getObject().position.z), targetY = gY + currentHeight;
