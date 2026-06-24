@@ -92,15 +92,15 @@
         #joystick-zone { position: absolute; bottom: 30px; left: 30px; width: 140px; height: 140px; background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 50%; pointer-events: auto; touch-action: none;}
         #joystick-knob { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; background: rgba(255, 255, 255, 0.4); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
         #look-shoot-zone { position: absolute; top: 0; right: 0; width: 60vw; height: 100vh; pointer-events: auto; touch-action: none; }
-        .action-btn-mobile { position: absolute; width: 56px; height: 56px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 50%; color: white; font-weight: bold; font-family: monospace; font-size: 13px; display: flex; justify-content: center; align-items: center; pointer-events: auto; user-select: none; touch-action: none; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .action-btn-mobile { position: absolute; width: 56px; height: 56px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 50%; color: white; font-weight: bold; font-family: monospace; font-size: 13px; display: flex; justify-content: center; align-items: center; pointer-events: auto; user-select: none; touch-action: none; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 10; }
         .action-btn-mobile:active { background: rgba(212, 175, 55, 0.6); border-color: #d4af37; transform: scale(0.95); }
         
-        #btn-fire { bottom: 40px; right: 40px; width: 80px; height: 80px; border-color: #f33; color: #f33; font-size: 16px; background: rgba(200, 0, 0, 0.2); z-index: 10; border-width: 2px;}
-        #btn-jump { bottom: 130px; right: 40px; z-index: 10; }
-        #btn-ads { bottom: 40px; right: 130px; z-index: 10; }
-        #btn-reload { bottom: 120px; right: 110px; z-index: 10; width: 50px; height: 50px; }
-        #btn-skill { bottom: 190px; right: 90px; width: 50px; height: 50px; border-color: #0fc; color: #0fc; border-width: 2px; z-index: 10; }
-        #btn-action { bottom: 200px; right: 30px; border-color: #fa0; color: #fa0; z-index: 10; width: 50px; height: 50px; }
+        #btn-fire { bottom: 40px; right: 40px; width: 80px; height: 80px; border-color: #f33; color: #f33; font-size: 16px; background: rgba(200, 0, 0, 0.2); border-width: 2px;}
+        #btn-jump { bottom: 130px; right: 40px; }
+        #btn-ads { bottom: 40px; right: 130px; }
+        #btn-reload { bottom: 120px; right: 110px; width: 50px; height: 50px; }
+        #btn-skill { bottom: 190px; right: 90px; width: 50px; height: 50px; border-color: #0fc; color: #0fc; border-width: 2px; }
+        #btn-action { bottom: 200px; right: 30px; border-color: #fa0; color: #fa0; width: 50px; height: 50px; }
 
         /* モバイル時の横画面レイアウト（スケーリングによる最適化） */
         @media screen and (max-width: 900px) and (orientation: landscape) {
@@ -121,7 +121,6 @@
             #kill-feed { transform: scale(0.65); transform-origin: top left; top: 100px; left: 5px; width: 250px; }
             
             #joystick-zone { bottom: 20px; left: 20px; width: 120px; height: 120px; }
-            
             #btn-fire { bottom: 20px; right: 20px; width: 90px; height: 90px; }
             #btn-jump { bottom: 120px; right: 20px; }
             #btn-ads { bottom: 20px; right: 120px; }
@@ -133,7 +132,6 @@
             #settings-menu { top: 50px; transform: scale(0.9); transform-origin: top right; }
         }
         
-        /* 縦画面スマホの保険用 */
         @media screen and (max-width: 600px) and (orientation: portrait) {
             #hud { transform: scale(0.6); transform-origin: bottom left; bottom: 5px; left: 5px; }
             #top-hud { transform: scale(0.6); transform-origin: top right; top: 5px; right: 5px; }
@@ -159,6 +157,7 @@
             <label style="color:#778877; font-size:12px;"><span data-i18n="sens">視点感度</span>: <span id="sens-display" style="color:#fff;">1.0</span></label><br>
             <input type="range" id="slider-sens" min="0.1" max="3.0" step="0.1" value="1.0" style="width:100%; margin-top:10px; accent-color:#d4af37;">
         </div>
+        <!-- ここにHUD編集ボタンがJSで追加されます -->
     </div>
 
     <!-- メインUIレイヤー -->
@@ -343,7 +342,8 @@
                 pcDesc: "> 移動: W A S D / マウス<br>> 射撃: 左クリック / 照準: 右クリック<br>> 跳躍: SPACE / 屈む: C / 装填: R<br>> 行動: F / 技: E (長押しで狙う)",
                 mbDesc: "> 移動: 左側ジョイスティック<br>> 視点: 画面右半分をスワイプ<br>> 射撃: FIREボタン (スライドでエイム可能)<br>> 跳躍 / 照準 / 装填: 各ボタン<br>> 行動: ACTボタン<br>> 技: SKLボタン (長押しで狙う)",
                 msgKill: "を撃破！ (+30 HP)", msgExp: "爆発で撃破！ (+30 HP)", msgStun: "がスタン！", msgBar: "壁を破壊！", msgPad: "ジャンプパッド作動！", msgVeh: "車両に衝突！", msgShrink: "縮小中",
-                btnF: "射撃", btnJ: "跳躍", btnA: "照準", btnR: "装填", btnS: "技", btnC: "行動", actZ: "[F] / ACT : ジップラインを使う"
+                btnF: "射撃", btnJ: "跳躍", btnA: "照準", btnR: "装填", btnS: "技", btnC: "行動", actZ: "[F] / ACT : ジップラインを使う",
+                editHud: "ボタン配置を変更", saveHud: "配置を保存して終了"
             },
             en: {
                 title: "WASTELAND WARFARE", sub: "TACTICAL DEPLOYMENT SYSTEM",
@@ -366,12 +366,14 @@
                 pcDesc: "> MOVE: W A S D / MOUSE<br>> FIRE: L-CLICK / ADS: R-CLICK<br>> JUMP: SPACE / CROUCH: C / RELOAD: R<br>> ACTION: F / SKILL: E (Hold to Aim)",
                 mbDesc: "> MOVE: Left Joystick<br>> LOOK: Right Area Swipe<br>> FIRE: FIRE Button (Slide to Aim)<br>> JUMP/ADS/REL: Screen Buttons<br>> ACTION: ACT Button<br>> SKILL: SKL Button (Hold to Aim)",
                 msgKill: " ELIMINATED! (+30 HP)", msgExp: "EXPLOSION KILL! (+30 HP)", msgStun: "is Stunned!", msgBar: "Barricade Destroyed!", msgPad: "Jump Pad Activated!", msgVeh: "Hit by Vehicle!", msgShrink: "SHRINKING",
-                btnF: "FIRE", btnJ: "JMP", btnA: "ADS", btnR: "REL", btnS: "SKL", btnC: "ACT", actZ: "[F] / ACT : USE ZIPLINE"
+                btnF: "FIRE", btnJ: "JMP", btnA: "ADS", btnR: "REL", btnS: "SKL", btnC: "ACT", actZ: "[F] / ACT : USE ZIPLINE",
+                editHud: "Edit HUD Layout", saveHud: "Save & Exit"
             }
         };
 
         let currentSens = 1.0;
         let isLangJa = true;
+        let isEditMode = false; // HUD編集モードフラグ
 
         function updateLangUI() {
             const l = isLangJa ? 'ja' : 'en';
@@ -379,6 +381,10 @@
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (dict[key]) el.innerHTML = dict[key];
+            });
+            document.querySelectorAll('[data-i18n-btn]').forEach(el => {
+                const key = el.getAttribute('data-i18n-btn');
+                if (dict[key]) el.innerText = dict[key];
             });
             if (isInitialized && state.wpn) {
                 const wpnNameDict = { 'AR': dict.arN, 'SMG': dict.smgN, 'SG': dict.sgN, 'SNIPER': dict.srN };
@@ -446,7 +452,6 @@
                 if (layer) { layer.style.opacity = 0; setTimeout(()=>{ layer.style.display='none'; }, 500); }
                 document.getElementById('crosshair').style.display='block'; document.getElementById('hud').style.display='flex'; document.getElementById('top-hud').style.display='flex'; document.getElementById('minimap-container').style.display='block'; document.getElementById('enemy-hp-container').style.display = 'block';
                 
-                // バトル開始時に設定ボタンを隠す
                 const btnSettings = document.getElementById('settings-btn');
                 if(btnSettings) btnSettings.style.display = 'none';
                 const menuSettings = document.getElementById('settings-menu');
@@ -595,77 +600,109 @@
         function setupMobileControls() {
             document.getElementById('mobile-controls').style.display = 'block'; document.getElementById('pc-controls-desc').style.display = 'none'; document.getElementById('mobile-controls-desc').style.display = 'block';
             
-            // 左側移動用ジョイスティック
             const joyZone = document.getElementById('joystick-zone'), joyKnob = document.getElementById('joystick-knob');
-            function handleJoy(e) { e.preventDefault(); const t = e.targetTouches[0], r = joyZone.getBoundingClientRect(), cx = r.left + r.width/2, cy = r.top + r.height/2, maxR = r.width/2; let dx = t.clientX - cx, dy = t.clientY - cy; const d = Math.sqrt(dx*dx + dy*dy); if (d > maxR) { dx = (dx / d) * maxR; dy = (dy / d) * maxR; } joyKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; mobileMoveVector.x = dx / maxR; mobileMoveVector.y = dy / maxR; }
-            function endJoy(e) { e.preventDefault(); joyKnob.style.transform = `translate(-50%, -50%)`; mobileMoveVector.x = 0; mobileMoveVector.y = 0; }
+            function handleJoy(e) { if(isEditMode) return; e.preventDefault(); const t = e.targetTouches[0], r = joyZone.getBoundingClientRect(), cx = r.left + r.width/2, cy = r.top + r.height/2, maxR = r.width/2; let dx = t.clientX - cx, dy = t.clientY - cy; const d = Math.sqrt(dx*dx + dy*dy); if (d > maxR) { dx = (dx / d) * maxR; dy = (dy / d) * maxR; } joyKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; mobileMoveVector.x = dx / maxR; mobileMoveVector.y = dy / maxR; }
+            function endJoy(e) { if(isEditMode) return; e.preventDefault(); joyKnob.style.transform = `translate(-50%, -50%)`; mobileMoveVector.x = 0; mobileMoveVector.y = 0; }
             joyZone.addEventListener('touchstart', handleJoy, {passive: false}); joyZone.addEventListener('touchmove', handleJoy, {passive: false}); joyZone.addEventListener('touchend', endJoy, {passive: false});
 
-            // 右側視点移動用スワイプ
             const lookZone = document.getElementById('look-shoot-zone');
-            lookZone.addEventListener('touchstart', (e) => { e.preventDefault(); if (lookTouchId === null) { const t = e.changedTouches[0]; lookTouchId = t.identifier; lastLookTouch.x = t.clientX; lastLookTouch.y = t.clientY; } }, {passive: false});
-            lookZone.addEventListener('touchmove', (e) => { e.preventDefault(); for (let i = 0; i < e.changedTouches.length; i++) { if (e.changedTouches[i].identifier === lookTouchId) { const t = e.changedTouches[i]; const dx = (t.clientX - lastLookTouch.x) * currentSens; const dy = (t.clientY - lastLookTouch.y) * currentSens; if (state.isPlaying && !state.isDead) { const euler = new THREE.Euler(0, 0, 0, 'YXZ'); euler.setFromQuaternion(camera.quaternion); const sens = 0.005; euler.y -= dx * sens; euler.x -= dy * sens; euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x)); camera.quaternion.setFromEuler(euler); } lastLookTouch.x = t.clientX; lastLookTouch.y = t.clientY; } } }, {passive: false});
-            lookZone.addEventListener('touchend', (e) => { e.preventDefault(); for (let i = 0; i < e.changedTouches.length; i++) { if (e.changedTouches[i].identifier === lookTouchId) { lookTouchId = null; } } }, {passive: false});
+            lookZone.addEventListener('touchstart', (e) => { if(isEditMode) return; e.preventDefault(); if (lookTouchId === null) { const t = e.changedTouches[0]; lookTouchId = t.identifier; lastLookTouch.x = t.clientX; lastLookTouch.y = t.clientY; } }, {passive: false});
+            lookZone.addEventListener('touchmove', (e) => { if(isEditMode) return; e.preventDefault(); for (let i = 0; i < e.changedTouches.length; i++) { if (e.changedTouches[i].identifier === lookTouchId) { const t = e.changedTouches[i]; const dx = (t.clientX - lastLookTouch.x) * currentSens; const dy = (t.clientY - lastLookTouch.y) * currentSens; if (state.isPlaying && !state.isDead) { const euler = new THREE.Euler(0, 0, 0, 'YXZ'); euler.setFromQuaternion(camera.quaternion); const sens = 0.005; euler.y -= dx * sens; euler.x -= dy * sens; euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x)); camera.quaternion.setFromEuler(euler); } lastLookTouch.x = t.clientX; lastLookTouch.y = t.clientY; } } }, {passive: false});
+            lookZone.addEventListener('touchend', (e) => { if(isEditMode) return; e.preventDefault(); for (let i = 0; i < e.changedTouches.length; i++) { if (e.changedTouches[i].identifier === lookTouchId) { lookTouchId = null; } } }, {passive: false});
             
-            // ★FIREボタン：押下で射撃＋スライドで視点移動（エイム）
             const btnFire = document.getElementById('btn-fire');
             let fireTouchId = null;
             let lastFireTouch = { x: 0, y: 0 };
             
             btnFire.addEventListener('touchstart', (e) => { 
-                e.preventDefault(); 
-                mouse.left = true; 
-                if (state.wpn.type !== 'auto') mouse.justPressed = true; 
-                
-                if (fireTouchId === null) {
-                    const t = e.changedTouches[0];
-                    fireTouchId = t.identifier;
-                    lastFireTouch.x = t.clientX;
-                    lastFireTouch.y = t.clientY;
-                }
+                if(isEditMode) return; e.preventDefault(); mouse.left = true; if (state.wpn.type !== 'auto') mouse.justPressed = true; 
+                if (fireTouchId === null) { const t = e.changedTouches[0]; fireTouchId = t.identifier; lastFireTouch.x = t.clientX; lastFireTouch.y = t.clientY; }
             }, {passive: false});
             
             btnFire.addEventListener('touchmove', (e) => {
-                e.preventDefault();
+                if(isEditMode) return; e.preventDefault();
                 for (let i = 0; i < e.changedTouches.length; i++) {
                     if (e.changedTouches[i].identifier === fireTouchId) {
-                        const t = e.changedTouches[i];
-                        const dx = (t.clientX - lastFireTouch.x) * currentSens;
-                        const dy = (t.clientY - lastFireTouch.y) * currentSens;
-                        
-                        if (state.isPlaying && !state.isDead) {
-                            const euler = new THREE.Euler(0, 0, 0, 'YXZ');
-                            euler.setFromQuaternion(camera.quaternion);
-                            const sens = 0.005;
-                            euler.y -= dx * sens;
-                            euler.x -= dy * sens;
-                            euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x));
-                            camera.quaternion.setFromEuler(euler);
-                        }
-                        lastFireTouch.x = t.clientX;
-                        lastFireTouch.y = t.clientY;
+                        const t = e.changedTouches[i], dx = (t.clientX - lastFireTouch.x) * currentSens, dy = (t.clientY - lastFireTouch.y) * currentSens;
+                        if (state.isPlaying && !state.isDead) { const euler = new THREE.Euler(0, 0, 0, 'YXZ'); euler.setFromQuaternion(camera.quaternion); const sens = 0.005; euler.y -= dx * sens; euler.x -= dy * sens; euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x)); camera.quaternion.setFromEuler(euler); }
+                        lastFireTouch.x = t.clientX; lastFireTouch.y = t.clientY;
                     }
                 }
             }, {passive: false});
             
-            const endFire = (e) => {
-                e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === fireTouchId) {
-                        fireTouchId = null;
-                        mouse.left = false;
-                        mouse.justPressed = false;
-                    }
-                }
-            };
-            btnFire.addEventListener('touchend', endFire, {passive: false});
-            btnFire.addEventListener('touchcancel', endFire, {passive: false});
+            const endFire = (e) => { if(isEditMode) return; e.preventDefault(); for (let i = 0; i < e.changedTouches.length; i++) { if (e.changedTouches[i].identifier === fireTouchId) { fireTouchId = null; mouse.left = false; mouse.justPressed = false; } } };
+            btnFire.addEventListener('touchend', endFire, {passive: false}); btnFire.addEventListener('touchcancel', endFire, {passive: false});
 
-            const btnJump = document.getElementById('btn-jump'); btnJump.addEventListener('touchstart', (e) => { e.preventDefault(); keys.space = true; simulateJump(); }); btnJump.addEventListener('touchend', (e) => { e.preventDefault(); keys.space = false; });
-            const btnAds = document.getElementById('btn-ads'); btnAds.addEventListener('touchstart', (e) => { e.preventDefault(); isAiming = true; }); btnAds.addEventListener('touchend', (e) => { e.preventDefault(); isAiming = false; });
-            const btnReload = document.getElementById('btn-reload'); btnReload.addEventListener('touchstart', (e) => { e.preventDefault(); if(state.ammo < state.wpn.clip && state.maxAmmo > 0 && !isSkydiving && !state.isZipping) doReload(); });
-            const btnSkill = document.getElementById('btn-skill'); btnSkill.addEventListener('touchstart', (e) => { e.preventDefault(); if (state.isPlaying && !state.isDead && !isSkydiving && !state.isZipping) { if (state.skillCooldown <= 0 && state.skillUses > 0) { if (state.cls.id === 'SCOUT') { if (!keys.e) { useSkill(); keys.e = true; } } else { keys.e = true; } } } }); btnSkill.addEventListener('touchend', (e) => { e.preventDefault(); if (keys.e && state.cls.id !== 'SCOUT' && state.isPlaying && !state.isDead && !isSkydiving && !state.isZipping) { if (state.skillCooldown <= 0 && state.skillUses > 0) useSkill(); } keys.e = false; hideSkillPreview(); });
-            const btnAction = document.getElementById('btn-action'); btnAction.addEventListener('touchstart', (e) => { e.preventDefault(); keys.f = true; }); btnAction.addEventListener('touchend', (e) => { e.preventDefault(); keys.f = false; });
+            const btnJump = document.getElementById('btn-jump'); btnJump.addEventListener('touchstart', (e) => { if(isEditMode) return; e.preventDefault(); keys.space = true; simulateJump(); }); btnJump.addEventListener('touchend', (e) => { if(isEditMode) return; e.preventDefault(); keys.space = false; });
+            const btnAds = document.getElementById('btn-ads'); btnAds.addEventListener('touchstart', (e) => { if(isEditMode) return; e.preventDefault(); isAiming = true; }); btnAds.addEventListener('touchend', (e) => { if(isEditMode) return; e.preventDefault(); isAiming = false; });
+            const btnReload = document.getElementById('btn-reload'); btnReload.addEventListener('touchstart', (e) => { if(isEditMode) return; e.preventDefault(); if(state.ammo < state.wpn.clip && state.maxAmmo > 0 && !isSkydiving && !state.isZipping) doReload(); });
+            const btnSkill = document.getElementById('btn-skill'); btnSkill.addEventListener('touchstart', (e) => { if(isEditMode) return; e.preventDefault(); if (state.isPlaying && !state.isDead && !isSkydiving && !state.isZipping) { if (state.skillCooldown <= 0 && state.skillUses > 0) { if (state.cls.id === 'SCOUT') { if (!keys.e) { useSkill(); keys.e = true; } } else { keys.e = true; } } } }); btnSkill.addEventListener('touchend', (e) => { if(isEditMode) return; e.preventDefault(); if (keys.e && state.cls.id !== 'SCOUT' && state.isPlaying && !state.isDead && !isSkydiving && !state.isZipping) { if (state.skillCooldown <= 0 && state.skillUses > 0) useSkill(); } keys.e = false; hideSkillPreview(); });
+            const btnAction = document.getElementById('btn-action'); btnAction.addEventListener('touchstart', (e) => { if(isEditMode) return; e.preventDefault(); keys.f = true; }); btnAction.addEventListener('touchend', (e) => { if(isEditMode) return; e.preventDefault(); keys.f = false; });
+
+            setupEditHUD();
+        }
+
+        // ★★★ ボタン配置カスタマイズ機能 ★★★
+        function setupEditHUD() {
+            const editBtn = document.createElement('button');
+            editBtn.id = 'btn-edit-hud';
+            editBtn.style.marginTop = '10px'; editBtn.style.padding = '8px 10px'; editBtn.style.background = '#222'; editBtn.style.color = '#d4af37'; editBtn.style.border = '1px solid #d4af37'; editBtn.style.borderRadius = '4px'; editBtn.style.width = '100%'; editBtn.style.cursor = 'pointer'; editBtn.style.fontWeight = 'bold';
+            editBtn.innerText = isLangJa ? 'ボタン配置を変更' : 'Edit HUD Layout';
+            editBtn.setAttribute('data-i18n-btn', 'editHud');
+            document.getElementById('settings-menu').appendChild(editBtn);
+
+            const overlay = document.createElement('div');
+            overlay.id = 'edit-hud-overlay';
+            overlay.style.display = 'none'; overlay.style.position = 'absolute'; overlay.style.top = '0'; overlay.style.left = '0'; overlay.style.width = '100%'; overlay.style.height = '100%'; overlay.style.background = 'rgba(0, 50, 100, 0.4)'; overlay.style.zIndex = '1000'; overlay.style.pointerEvents = 'none';
+            
+            const finishBtn = document.createElement('button');
+            finishBtn.id = 'btn-finish-edit';
+            finishBtn.style.position = 'absolute'; finishBtn.style.top = '20px'; finishBtn.style.left = '50%'; finishBtn.style.transform = 'translateX(-50%)'; finishBtn.style.background = '#d4af37'; finishBtn.style.color = '#000'; finishBtn.style.padding = '10px 20px'; finishBtn.style.fontWeight = 'bold'; finishBtn.style.border = 'none'; finishBtn.style.borderRadius = '5px'; finishBtn.style.pointerEvents = 'auto';
+            finishBtn.innerText = isLangJa ? '配置を保存して終了' : 'Save & Exit';
+            finishBtn.setAttribute('data-i18n-btn', 'saveHud');
+            overlay.appendChild(finishBtn); document.body.appendChild(overlay);
+
+            const editableIds = ['joystick-zone', 'btn-fire', 'btn-jump', 'btn-ads', 'btn-reload', 'btn-skill', 'btn-action'];
+            let draggedElement = null; let dragOffset = { x: 0, y: 0 };
+
+            editBtn.addEventListener('click', () => {
+                isEditMode = true; document.getElementById('settings-menu').style.display = 'none'; overlay.style.display = 'block';
+                editableIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.style.boxShadow = '0 0 15px #0ff'; el.style.zIndex = '1001';
+                        // 初期配置（bottom/right等）を現在のピクセル座標（left/top）に固定して移動しやすくする
+                        const rect = el.getBoundingClientRect();
+                        el.style.bottom = 'auto'; el.style.right = 'auto'; el.style.left = rect.left + 'px'; el.style.top = rect.top + 'px';
+                    }
+                });
+            });
+
+            finishBtn.addEventListener('click', () => {
+                isEditMode = false; overlay.style.display = 'none';
+                editableIds.forEach(id => { const el = document.getElementById(id); if(el) { el.style.boxShadow = ''; el.style.zIndex = '10'; } });
+            });
+
+            editableIds.forEach(id => {
+                const el = document.getElementById(id);
+                if(!el) return;
+                el.addEventListener('touchstart', (e) => {
+                    if(!isEditMode) return; e.preventDefault(); draggedElement = el;
+                    const touch = e.changedTouches[0]; const rect = el.getBoundingClientRect();
+                    dragOffset.x = touch.clientX - rect.left; dragOffset.y = touch.clientY - rect.top;
+                }, {passive: false});
+
+                el.addEventListener('touchmove', (e) => {
+                    if(!isEditMode || draggedElement !== el) return; e.preventDefault();
+                    const touch = e.changedTouches[0];
+                    let nx = touch.clientX - dragOffset.x, ny = touch.clientY - dragOffset.y;
+                    nx = Math.max(0, Math.min(window.innerWidth - el.offsetWidth, nx)); ny = Math.max(0, Math.min(window.innerHeight - el.offsetHeight, ny));
+                    el.style.left = nx + 'px'; el.style.top = ny + 'px';
+                }, {passive: false});
+
+                const endDrag = (e) => { if(!isEditMode) return; e.preventDefault(); if(draggedElement === el) draggedElement = null; };
+                el.addEventListener('touchend', endDrag, {passive: false}); el.addEventListener('touchcancel', endDrag, {passive: false});
+            });
         }
 
         function simulateJump() {
@@ -959,7 +996,7 @@
         function animate() {
             requestAnimationFrame(animate); const time = performance.now(); const delta = Math.min((time - prevTime)/1000, 0.1); prevTime = time;
             if (!state.isPlaying) { if (previewMesh && (state.step === 1 || state.step === 2)) previewMesh.rotation.y += 0.5 * delta; else if (state.step === 3) { camera.position.x = Math.sin(time*0.0003)*220; camera.position.z = Math.cos(time*0.0003)*220; camera.position.y = 120 + Math.sin(time*0.0001)*40; camera.lookAt(0,0,0); } }
-            if (state.isPlaying && !state.isDead && (controls.isLocked || isMobileDevice)) {
+            if (state.isPlaying && !state.isDead && (controls.isLocked || isMobileDevice) && !isEditMode) {
                 if(state.skillCooldown > 0) state.skillCooldown -= delta; if(state.scanTimer > 0) state.scanTimer -= delta; 
                 if (keys.e && state.skillCooldown <= 0 && state.skillUses > 0 && !isSkydiving && !state.isZipping && !state.isDead && state.isPlaying && state.cls.id !== 'SCOUT') { updateSkillPreview(); } else { hideSkillPreview(); }
                 if (state.reloadTimer > 0) { state.reloadTimer -= delta; document.getElementById('reload-fill').style.width = (1 - state.reloadTimer/(state.wpn.reload * ((state.cls.id === 'SOLDIER') ? 0.5 : 1.0)))*100 + '%'; if (state.reloadTimer <= 0) { const add = Math.min(state.wpn.clip - state.ammo, state.maxAmmo); state.ammo += add; state.maxAmmo -= add; updateHUD(); document.getElementById('reload-bar').style.display = 'none'; } }
